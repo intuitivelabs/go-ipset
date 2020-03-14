@@ -1,4 +1,4 @@
-module github.com/janeczku/go-ipset
+module github.com/aporeto-inc/go-ipset
 
 go 1.13
 
