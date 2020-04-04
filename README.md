@@ -1,3 +1,8 @@
+**NOTE: default branch**
+
+The default branch of this fork that is used in the enforcer is `go-mod` now that we moved to go modules.
+We **must not** merge this into the master branch as master is used by older releases and would break.
+
 # go-ipset #
 
 This library is a simple GoLang wrapper to the IPtables ipset userspace utility.
