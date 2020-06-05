@@ -63,7 +63,7 @@ func initCheck(name ...string) error {
 		checkname = name[0]
 	}
 	if ipsetPath == "" {
-		path, err := exec.LookPath(name)
+		path, err := exec.LookPath(checkname)
 		if err != nil {
 			return errIpsetNotFound
 		}
