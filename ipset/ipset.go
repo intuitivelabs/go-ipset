@@ -57,12 +57,14 @@ type IPSet struct {
 
 func initCheck(name ...string) error {
 	var checkname string
-	if len(name) == 0 || (len(name) == 1 && name[0] == "") {
-		checkname = "ipset"
-	} else {
-		checkname = name[0]
-	}
 	if ipsetPath == "" {
+
+		if len(name) == 0 || (len(name) == 1 && name[0] == "") {
+			checkname = "ipset"
+		} else {
+			checkname = name[0]
+		}
+
 		path, err := exec.LookPath(checkname)
 		if err != nil {
 			return errIpsetNotFound
