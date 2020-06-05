@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/coreos/go-semver/semver"
+	log "github.com/sirupsen/logrus"
 )
 
 const minIpsetVersion = "6.0.0"
@@ -55,9 +55,15 @@ type IPSet struct {
 	Timeout    int
 }
 
-func initCheck() error {
+func initCheck(name ...string) error {
+	var checkname string
+	if len(name) == 0 || (len(name) == 1 && name[0] == "") {
+		checkname = "ipset"
+	} else {
+		checkname = name[0]
+	}
 	if ipsetPath == "" {
-		path, err := exec.LookPath("ipset")
+		path, err := exec.LookPath(name)
 		if err != nil {
 			return errIpsetNotFound
 		}
@@ -89,6 +95,11 @@ func (s *IPSet) createHashSet(name string) error {
 		return fmt.Errorf("error flushing ipset %s: %v (%s)", name, err, out)
 	}
 	return nil
+}
+
+// Init sets up the package with the named ipset or default
+func Init(name string) error {
+	return initCheck(name)
 }
 
 // New creates a new set and returns an Interface to it.
