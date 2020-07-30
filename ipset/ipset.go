@@ -250,40 +250,38 @@ func (s *IPSet) Destroy() error {
 // Note that the variadic allows for DestroyAll("prefix1", "prefix2")
 // but all arguments after prefix1 are currently ignored
 //
-func DestroyAll(prefix ...string) error {
+func DestroyAll(prefix string) error {
 
 	initCheck()
 
-	var searchPrefix string
-
-	if len(prefix) == 0 {
-		searchPrefix = AllSets
-	} else {
-		searchPrefix = prefix[0] // might be AllSets
+	if prefix == "" {
+		return exec.Command(ipsetPath, "destroy").Run()
 	}
 
-	if ips, err := listAllSetNames(); err != nil {
+	ips, err := listAllSetNames()
+	if err != nil {
 		return err
-	} else {
-		var errs strings.Builder
-		for _, name := range ips {
-			if strings.HasPrefix(name, searchPrefix) { // AllSets always matches :)
-				if err = destroyIPSet(name); err != nil {
-					errs.WriteString(fmt.Sprintf("ipset(%s): %s\n", name, err.Error()))
-				}
+	}
+
+	var errs strings.Builder
+	for _, name := range ips {
+		if strings.HasPrefix(name, prefix) { // AllSets always matches :)
+			if err = destroyIPSet(name); err != nil {
+				errs.WriteString(fmt.Sprintf("ipset(%s): %s\n", name, err.Error()))
 			}
-		}
-		if len(errs.String()) != 0 { // if errors occured above
-			prefixMsg := func() string {
-				if searchPrefix == AllSets {
-					return "all"
-				} else {
-					return "prefix"
-				}
-			}
-			return fmt.Errorf("error destroying %s sets %s (%s)", prefixMsg(), searchPrefix, errs.String())
 		}
 	}
+
+	if len(errs.String()) != 0 { // if errors occured above
+		prefixMsg := func() string {
+			if prefix == AllSets {
+				return "all"
+			}
+			return "prefix"
+		}
+		return fmt.Errorf("error destroying %s sets %s (%s)", prefixMsg(), prefix, errs.String())
+	}
+
 	return nil
 }
 
