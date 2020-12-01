@@ -95,10 +95,12 @@ func (s *IPSet) createHashSet(name string) error {
 	if err != nil {
 		return fmt.Errorf("error creating ipset %s with type %s: %v (%s)", name, s.HashType, err, out)
 	}
+	/* do NOT flush existing ipset
 	out, err = exec.Command(ipsetPath, "flush", name).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error flushing ipset %s: %v (%s)", name, err, out)
 	}
+	*/
 	return nil
 }
 
