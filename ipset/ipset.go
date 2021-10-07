@@ -246,6 +246,7 @@ func (s *IPSet) Statistics() (stats Stats, err error) {
 	if err != nil {
 		return
 	}
+	fmt.Printf("info: %v\n", info)
 	if len(info) == 0 {
 		return
 	}
