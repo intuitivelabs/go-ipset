@@ -251,9 +251,10 @@ func (s *IPSet) Statistics() (stats Stats, err error) {
 		return
 	}
 	// split on white spaces
-	for _, l := range strings.Fields(info[0]) {
+	for _, l := range info {
 		// split on ":"
 		values := strings.Split(l, ":")
+		fmt.Printf("values: %v\n", info)
 		if len(values) == 0 {
 			continue
 		}
