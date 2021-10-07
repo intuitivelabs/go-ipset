@@ -1,4 +1,4 @@
-module github.com/vladabroz/go-ipset
+module github.com/intuitivelabs/go-ipset
 
 go 1.15
 
