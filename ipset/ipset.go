@@ -254,7 +254,7 @@ func (s *IPSet) Statistics() (stats Stats, err error) {
 	for _, l := range info {
 		// split on ":"
 		values := strings.Split(l, ":")
-		fmt.Printf("l: %s values: %v\n", l, info)
+		fmt.Printf("l: %s values: %v\n", l, values)
 		if len(values) == 0 {
 			continue
 		}
@@ -262,17 +262,17 @@ func (s *IPSet) Statistics() (stats Stats, err error) {
 		case "Type":
 			stats.Type = values[1]
 		case "Size in memory":
-			stats.Size, err = strconv.ParseUint(values[1], 0, 64)
+			stats.Size, err = strconv.ParseUint(values[1], 10, 64)
 			if err != nil {
 				return
 			}
 		case "References":
-			stats.Refs, err = strconv.ParseUint(values[1], 0, 64)
+			stats.Refs, err = strconv.ParseUint(values[1], 10, 64)
 			if err != nil {
 				return
 			}
 		case "Number of entries":
-			stats.Entries, err = strconv.ParseUint(values[1], 0, 64)
+			stats.Entries, err = strconv.ParseUint(values[1], 10, 64)
 			if err != nil {
 				return
 			}
