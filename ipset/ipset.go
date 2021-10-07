@@ -246,7 +246,6 @@ func (s *IPSet) Statistics() (stats Stats, err error) {
 	if err != nil {
 		return
 	}
-	fmt.Printf("info: %v\n", info)
 	if len(info) == 0 {
 		return
 	}
@@ -254,7 +253,6 @@ func (s *IPSet) Statistics() (stats Stats, err error) {
 	for _, l := range info {
 		// split on ":"
 		values := strings.Split(l, ":")
-		fmt.Printf("l: %s values: %v\n", l, values)
 		if len(values) == 0 {
 			continue
 		}
@@ -377,10 +375,6 @@ func listWithOpts(set string, opts ...string) ([]string, error) {
 	out, err := exec.Command(ipsetPath, cmd...).CombinedOutput()
 	if err != nil {
 		return []string{}, fmt.Errorf("error listing set %s: %v (%s)", set, err, out)
-	}
-	fmt.Println(string(out[:]))
-	for _, s := range strings.Split(string(out[:]), "\n") {
-		fmt.Println(s)
 	}
 	return strings.Split(string(out[:]), "\n"), nil
 }
