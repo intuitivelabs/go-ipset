@@ -40,6 +40,14 @@ var (
 	errIpsetNotSupported = errors.New("Ipset utility version is not supported, requiring version >= 6.0")
 )
 
+// Stats defines the type and metrics of the sets
+type Stats struct {
+	Type    string
+	Size    uint64
+	Refs    uint64
+	Entries uint64
+}
+
 // Params defines optional parameters for creating a new set.
 type Params struct {
 	HashFamily string
@@ -228,6 +236,46 @@ func (s *IPSet) List() ([]string, error) {
 	return list(s.Name)
 }
 
+// ListTerse is used to show the name and statistics for a set
+func (s *IPSet) ListTerse() ([]string, error) {
+	return listWithOpts(s.Name, "-t")
+}
+
+func (s *IPSet) Statistics() (stats Stats, err error) {
+	info, err := s.ListTerse()
+	if err != nil {
+		return
+	}
+	// split on white spaces
+	for _, l := range strings.Fields(info[0]) {
+		// split on ":"
+		values := strings.Split(l, ":")
+		if len(values) == 0 {
+			continue
+		}
+		switch values[0] {
+		case "Type":
+			stats.Type = values[2]
+		case "Size in memory":
+			stats.Size, err = strconv.ParseUint(values[2], 0, 64)
+			if err != nil {
+				return
+			}
+		case "References":
+			stats.Refs, err = strconv.ParseUint(values[2], 0, 64)
+			if err != nil {
+				return
+			}
+		case "Number of entries":
+			stats.Entries, err = strconv.ParseUint(values[2], 0, 64)
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
 // Destroy is used to destroy the set.
 func (s *IPSet) Destroy() error {
 	out, err := exec.Command(ipsetPath, "destroy", s.Name).CombinedOutput()
@@ -305,6 +353,22 @@ func destroyIPSet(name string) error {
 }
 
 func list(set string) ([]string, error) {
+	out, err := exec.Command(ipsetPath, "list", set).CombinedOutput()
+	if err != nil {
+		return []string{}, fmt.Errorf("error listing set %s: %v (%s)", set, err, out)
+	}
+	r := regexp.MustCompile("(?m)^(.*\n)*Members:\n")
+	newlist := r.ReplaceAllString(string(out[:]), "")
+	return strings.FieldsFunc(newlist, fieldsFunc), nil
+}
+
+func listWithOpts(set string, opts ...string) ([]string, error) {
+	var cmd []string
+	if len(opts) != 0 {
+		cmd = append(cmd, opts...)
+	}
+	cmd = append(cmd, "list")
+	cmd = append(cmd, set)
 	out, err := exec.Command(ipsetPath, "list", set).CombinedOutput()
 	if err != nil {
 		return []string{}, fmt.Errorf("error listing set %s: %v (%s)", set, err, out)
