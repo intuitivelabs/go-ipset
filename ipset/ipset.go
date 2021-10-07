@@ -260,19 +260,19 @@ func (s *IPSet) Statistics() (stats Stats, err error) {
 		}
 		switch values[0] {
 		case "Type":
-			stats.Type = values[1]
+			stats.Type = strings.Trim(values[1], " ")
 		case "Size in memory":
-			stats.Size, err = strconv.ParseUint(values[1], 10, 64)
+			stats.Size, err = strconv.ParseUint(strings.Trim(values[1], " "), 10, 64)
 			if err != nil {
 				return
 			}
 		case "References":
-			stats.Refs, err = strconv.ParseUint(values[1], 10, 64)
+			stats.Refs, err = strconv.ParseUint(strings.Trim(values[1], " "), 10, 64)
 			if err != nil {
 				return
 			}
 		case "Number of entries":
-			stats.Entries, err = strconv.ParseUint(values[1], 10, 64)
+			stats.Entries, err = strconv.ParseUint(strings.Trim(values[1], " "), 10, 64)
 			if err != nil {
 				return
 			}
