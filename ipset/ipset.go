@@ -246,6 +246,9 @@ func (s *IPSet) Statistics() (stats Stats, err error) {
 	if err != nil {
 		return
 	}
+	if len(info) == 0 {
+		return
+	}
 	// split on white spaces
 	for _, l := range strings.Fields(info[0]) {
 		// split on ":"
