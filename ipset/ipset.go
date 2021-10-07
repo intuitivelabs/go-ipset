@@ -377,6 +377,12 @@ func listWithOpts(set string, opts ...string) ([]string, error) {
 		return []string{}, fmt.Errorf("error listing set %s: %v (%s)", set, err, out)
 	}
 	fmt.Println(string(out[:]))
+	for _, s := range strings.Fields(string(out[:])) {
+		fmt.Println(s)
+	}
+	for _, s := range strings.FieldsFunc(string(out[:]), fieldsFunc) {
+		fmt.Println(s)
+	}
 	return strings.FieldsFunc(string(out[:]), fieldsFunc), nil
 }
 
