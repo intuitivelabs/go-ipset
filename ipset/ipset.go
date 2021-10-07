@@ -372,10 +372,11 @@ func listWithOpts(set string, opts ...string) ([]string, error) {
 	}
 	cmd = append(cmd, "list")
 	cmd = append(cmd, set)
-	out, err := exec.Command(ipsetPath, "list", set).CombinedOutput()
+	out, err := exec.Command(ipsetPath, cmd...).CombinedOutput()
 	if err != nil {
 		return []string{}, fmt.Errorf("error listing set %s: %v (%s)", set, err, out)
 	}
+	fmt.Println(out)
 	r := regexp.MustCompile("(?m)^(.*\n)*Members:\n")
 	newlist := r.ReplaceAllString(string(out[:]), "")
 	return strings.FieldsFunc(newlist, fieldsFunc), nil
