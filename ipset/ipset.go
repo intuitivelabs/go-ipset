@@ -376,7 +376,7 @@ func listWithOpts(set string, opts ...string) ([]string, error) {
 	if err != nil {
 		return []string{}, fmt.Errorf("error listing set %s: %v (%s)", set, err, out)
 	}
-	fmt.Println(out)
+	fmt.Println(string(out[:]))
 	r := regexp.MustCompile("(?m)^(.*\n)*Members:\n")
 	newlist := r.ReplaceAllString(string(out[:]), "")
 	return strings.FieldsFunc(newlist, fieldsFunc), nil
