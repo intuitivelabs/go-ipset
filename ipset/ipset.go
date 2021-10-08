@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -39,6 +40,14 @@ var (
 	errIpsetNotFound     = errors.New("Ipset utility not found")
 	errIpsetNotSupported = errors.New("Ipset utility version is not supported, requiring version >= 6.0")
 )
+
+// Stats defines the type and metrics of the sets
+type Stats struct {
+	Type    string `ipset:"Type"`
+	Size    uint64 `ipset:"Size in memory"`
+	Refs    uint64 `ipset:"References"`
+	Entries uint64 `ipset:"Number of entries"`
+}
 
 // Params defines optional parameters for creating a new set.
 type Params struct {
@@ -228,6 +237,87 @@ func (s *IPSet) List() ([]string, error) {
 	return list(s.Name)
 }
 
+// ListTerse is used to show the name and statistics for a set
+func (s *IPSet) ListTerse() ([]string, error) {
+	return listWithOpts(s.Name, "-t")
+}
+
+// loadStats uses reflection to load information into a Stats data structure.
+// key is the Stats struct tag key and val is the Stats struct tag value.
+func loadStats(stats *Stats, key, val string) error {
+	// get the reflected structure (type and value)
+	st := reflect.TypeOf(*stats)
+	sv := reflect.ValueOf(stats).Elem()
+	// iterate over the fields of the structure
+	for i := 0; i < st.NumField(); i++ {
+		// field's type
+		ft := st.Field(i)
+		// field's value
+		fv := sv.Field(i)
+		if !fv.IsValid() {
+			continue
+		}
+		if detail, ok := ft.Tag.Lookup("ipset"); ok {
+			if detail == key && fv.CanSet() {
+				switch fv.Kind() {
+				case reflect.Uint64:
+					parsed, err := strconv.ParseUint(val, 10, 64)
+					if err != nil {
+						return err
+					}
+					fv.SetUint(parsed)
+				case reflect.String:
+					fv.SetString(val)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// parseListTerse parses the details returned by `ipset -l list set_name`. Parameter details is a string slice with the following format:
+//
+// {"key_1: val", "key_2:val", ...}
+// Possible values for the keys: "Name", "Type","Revision", "Header", "Size in memory", "References", "Number of entries"
+func parseListTerse(details []string) (stats Stats, err error) {
+	// split on white spaces
+	for _, l := range details {
+		// split on ":"
+		values := strings.Split(l, ":")
+		if len(values) < 2 {
+			continue
+		}
+		// remove the blanks
+		key := strings.Trim(values[0], " ")
+		val := strings.Trim(values[1], " ")
+		if err = loadStats(&stats, key, val); err != nil {
+			return
+		}
+	}
+	return
+}
+
+// Statistics returns the details of the set in a Stats data structure.
+// The details are obtained by parsing the output of `ipset -l list set_name` command. Here is the (line oriented) format of the output:
+//
+// Name: set_name
+// Type: hash:ip
+// Revision: 4
+// Header: family inet hashsize 1024 maxelem 65536 timeout 0
+// Size in memory: 296
+// References: 2
+// Number of entries: 1
+func (s *IPSet) Statistics() (stats Stats, err error) {
+	details, err := s.ListTerse()
+	if err != nil {
+		return
+	}
+	if len(details) == 0 {
+		return
+	}
+	return parseListTerse(details)
+}
+
 // Destroy is used to destroy the set.
 func (s *IPSet) Destroy() error {
 	out, err := exec.Command(ipsetPath, "destroy", s.Name).CombinedOutput()
@@ -312,6 +402,20 @@ func list(set string) ([]string, error) {
 	r := regexp.MustCompile("(?m)^(.*\n)*Members:\n")
 	newlist := r.ReplaceAllString(string(out[:]), "")
 	return strings.FieldsFunc(newlist, fieldsFunc), nil
+}
+
+func listWithOpts(set string, opts ...string) ([]string, error) {
+	var cmd []string
+	if len(opts) != 0 {
+		cmd = append(cmd, opts...)
+	}
+	cmd = append(cmd, "list")
+	cmd = append(cmd, set)
+	out, err := exec.Command(ipsetPath, cmd...).CombinedOutput()
+	if err != nil {
+		return []string{}, fmt.Errorf("error listing set %s: %v (%s)", set, err, out)
+	}
+	return strings.Split(string(out[:]), "\n"), nil
 }
 
 func getIpsetSupportedVersion() (bool, error) {
