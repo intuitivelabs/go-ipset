@@ -282,9 +282,10 @@ func loadStats(stats *Stats, key, val string) error {
 func parseListTerse(details []string) (stats Stats, err error) {
 	// split on white spaces
 	for _, l := range details {
-		fmt.Println(l)
+		fmt.Println("l:", l)
 		// split on ":"
 		values := strings.Split(l, ":")
+		fmt.Println("values:", values)
 		if len(values) == 0 {
 			continue
 		}
