@@ -286,7 +286,7 @@ func parseListTerse(details []string) (stats Stats, err error) {
 		// split on ":"
 		values := strings.Split(l, ":")
 		fmt.Println("values:", values)
-		if len(values) < 1 {
+		if len(values) < 2 {
 			continue
 		}
 		// remove the blanks
